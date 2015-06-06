@@ -1,5 +1,13 @@
 language: python
 install:
-  - pip install 'tox<2'
+- pip install 'tox<2'
 script:
-  - tox
+- tox
+deploy:
+  provider: pypi
+  user: lad1337
+  password:
+    secure: YEXEPCQlejMsEvXbMfSnWKoqjO/oXBkYsF89ONJGvcABzaUTKIROFFl+lJ5FRClL/41uVWs7Mx9mvJWtNDYQaDC00QEZwlUEozqDMbS+EUtpKQwE8rYIDxyW40cAFPMpNBwAeWPAGfJbeop+1NUZebNHimJWDX6Q30WXSRJf4XYxqc0M46Oa5NhPbsbY6Q0eiHBZEtuyeVcb4rbHBUirrmCTQvlTywNTMpVKJUr6YsQXrCQvXYRAtdW87QEqMfZYV+bd1dAxaZQRm9wzP+XDiWpFRFIP2Krm+WdpPl62GovMBEbOg5jpUb+BCJLdE8LySsOh4hLNgW4kmg+O7/Z48GjLKWOcNd3Iy5iIFl2LLrT+Zssjs2WKirrkAUc/MxQsGPigYbtylYAAFRQhJ0JOtADS5NDijXHGBaBFQ0rkUAQY2UCcdp0n40ilm8o58Kuk6MWFmO80vYAjVEjwipL+2LJMv1tu1UR6Jj+KanJwrtvn/Qs4unPMywnxudzDinKcl3lTZiVydJY82p8SMI0dOjXR4zQufaG0SZn21hohbRFq5f/lJiZXrx1aa5kVE4Mip29YHQJ69WZivbEAzaXCq/FXGuchNVttnn/Zt99D97TapGp0NiTnBYgCo+ZkukE1rntXJADuR8D7TccKN1c8s/pkSWAE9W/n2AHSzjamtHo=
+  on:
+    tags: true
+    branch: master
