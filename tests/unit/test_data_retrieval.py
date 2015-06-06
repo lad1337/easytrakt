@@ -97,7 +97,38 @@ def test_date_parser(client):
              "updated_at": "2006-10-08T04:00:00.000Z"
          }}
     ])
-
     show = client.search("foo")[0]
     assert show.first_aired is None
     assert show.updated_at == date_parser("2006-10-08T04:00:00.000Z")
+
+
+def test_initial_missing_image_type(client):
+    client.request = Mock(return_value=[
+        {"type": "show",
+         "show": {
+             "title": "foo",
+             "ids": {"trakt": 1},
+             "first_aired": None,
+             "images": {
+                 "poster": {"full": "poster_image_url"}
+             }
+         }}
+    ])
+    show = client.search("foo")[0]
+    client.request = Mock(return_value={
+        "images": {
+            "poster": {"full": "poster_image_url"},
+            "banner": {"full": "banner_image_url"},
+            "logo": {"full": "logo_image_url"},
+            "clearart": {"full": "clearart_image_url"},
+            "fanart": {"full": "fanart_image_url"},
+            "thumb": {"full": "thumb_image_url"}
+        },
+        "ids": {"trakt": 1},
+    })
+    assert show.images.poster.full == "poster_image_url"
+    assert show.images.banner.full == "banner_image_url"
+    assert show.images.logo.full == "logo_image_url"
+    assert show.images.clearart.full == "clearart_image_url"
+    assert show.images.fanart.full == "fanart_image_url"
+    assert show.images.thumb.full == "thumb_image_url"
