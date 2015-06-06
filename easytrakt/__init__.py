@@ -41,9 +41,10 @@ class Client(object):
                 for item in self.request("search", params)]
 
     def request(self, uri_path, params=None):
-        self.logger.info("call to: %s with %s", uri_path, params)
+        uri = "{}/{}".format(self.base_url, uri_path)
+        self.logger.info("call to: %s with %s", uri, params)
         result = self.session.get(
-            "{}/{}".format(self.base_url, uri_path),
+            uri,
             params=params,
             verify=self.verify_ssl
         )

@@ -14,6 +14,7 @@ def test_search_show(client):
     assert show.ids.trakt == 1396
     assert show.id == 1396
     assert show.images.poster.full.startswith("http")
+    assert show.images.banner.full.startswith("http")
 
 
 def test_search_movie(client):

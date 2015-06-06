@@ -1,4 +1,5 @@
 from collections import defaultdict
+from functools import partial
 from json import loads
 
 from attrdict import AttrDict
@@ -14,7 +15,10 @@ def model_from_search_item(client, item):
     return TYPE_MAP[type_](client, item[type_])
 
 
-def images_generator(client, images, parent):
+def images_generator(client, images, parent, expected=()):
+    if expected and not all(type_ in images for type_ in expected):
+        raise GeneratorExit(
+            "not all expected image types found %s", expected)
     out = AttrDict()
     for type_, sizes in images.items():
         for size, url in sizes.items():
@@ -47,9 +51,13 @@ class BaseModel(object):
     def handle_nested(self, name, generator):
         if name != "ids":
             self.client.logger.debug(
-                "%s building nested property '%s' with %s",
-                self, name, self._data[name])
-        return generator(self.client, self._data[name], self)
+                "%s building nested property '%s'", self, name)
+        try:
+            return generator(self.client, self._data[name], self)
+        except GeneratorExit:
+            del self._data[name]
+            self.client.logger.error("GeneratorExit during %s", name)
+        return getattr(self, name)
 
     def __getattr__(self, name):
         if name in self._data:
@@ -204,7 +212,10 @@ class Show(BaseModel):
     nested = {
         "seasons": lambda c, ss, p: [Season(c, s, p) for s in ss],
         "airs": lambda c, d, p: AttrDict(d),
-        "images": images_generator,
+        "images": partial(
+            images_generator,
+            expected=["poster", "banner", "logo", "clearart", "thumb", "fanart"]
+        ),
         "updated_at": date_generator,
         "first_aired": date_generator
     }
