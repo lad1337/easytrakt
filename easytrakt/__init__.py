@@ -10,7 +10,6 @@ from models import model_from_search_item
 from models import TYPE_MAP
 
 BASE_URL = "https://api-v2launch.trakt.tv"
-VERIFY_SSL = True
 logger = logging.getLogger("easytrakt")
 
 
