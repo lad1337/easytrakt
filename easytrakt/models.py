@@ -24,6 +24,11 @@ def images_generator(client, images, parent):
     return out
 
 
+def date_generator(client, date, parent):
+    if date:
+        return date_parser(date)
+
+
 class BaseModel(object):
     id_key = None
     extendables = defaultdict(list)
@@ -149,7 +154,7 @@ class Movie(BaseModel):
                  "certification"],
         "/seasons": ["seasons"]}
     nested = {
-        "released": lambda c, d, p: date_parser(d),
+        "released": date_generator,
         "images": images_generator
     }
     uri_section = "/movies/{self.id}"
@@ -164,7 +169,7 @@ class Episode(BaseModel):
             "updated_at", "rating", "votes", "available_translations"],
         "episodes": ["episodes"]}
     nested = {
-        "first_aired": lambda c, d, p: date_parser(d),
+        "first_aired": date_generator,
         "images": images_generator
     }
     uri_section = "/episodes/{self.number}"
@@ -190,12 +195,18 @@ class Show(BaseModel):
     extendables = {
         "show": ["title", "ids"],
         "images": ["images"],
-        "full": ["overview", "airs"],
+        "full": [
+            "status", "rating", "votes", "network", "language",
+            "overview", "first_aired", "aired_episodes", "updated_at",
+            "country", "available_translations", "airs", "year",
+            "certification", "runtime", "homepage", "trailer", "genres"],
         "/seasons": ["seasons"]}
     nested = {
         "seasons": lambda c, ss, p: [Season(c, s, p) for s in ss],
         "airs": lambda c, d, p: AttrDict(d),
-        "images": images_generator
+        "images": images_generator,
+        "updated_at": date_generator,
+        "first_aired": date_generator
     }
     uri_section = "shows/{self.ids.trakt}"
 
