@@ -46,7 +46,6 @@ def test_extend_fail(client):
     client.request = Mock(return_value=[
         {"type": "show", "show": {"title": "foo", "ids": {"trakt": 1}}}
     ])
-
     show = client.search("foo")[0]
     with pytest.raises(AttributeError):
         assert show.foo
@@ -59,7 +58,6 @@ def test_extend_seasons(client):
 
     show = client.search("foo")[0]
     assert show.title == "foo"
-
     client.request = Mock(return_value=[{"number": 0, "ids": {"trakt": 3}}])
     assert len(show.seasons) == 1
     assert isinstance(show.seasons[0], Season)
