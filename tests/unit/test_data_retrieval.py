@@ -1,3 +1,4 @@
+from dateutil.parser import parse as date_parser
 from mock import Mock
 import pytest
 
@@ -22,7 +23,7 @@ def test_search_helpers(client):
 
     result = client.shows("foo")
     client.request.assert_called_once_with(
-        "search", {'query': 'foo', 'year': None, 'type': 'show'})
+        "search", {"query": "foo", "year": None, "type": "show"})
     assert result
     assert isinstance(result[0], Show)
     assert result[0].title == "foo"
@@ -80,4 +81,23 @@ def test_init_with_trakt_id(client):
 
 def test_keys(client):
     assert Show(client, 1).keys() == [
-        'airs', 'ids', 'images', 'overview', 'seasons', 'title']
+        "aired_episodes", "airs", "available_translations", "certification",
+        "country", "first_aired", "genres", "homepage", "ids", "images",
+        "language", "network", "overview", "rating", "runtime", "seasons",
+        "status", "title", "trailer", "updated_at", "votes", "year"]
+
+
+def test_date_parser(client):
+    client.request = Mock(return_value=[
+        {"type": "show",
+         "show": {
+             "title": "foo",
+             "ids": {"trakt": 1},
+             "first_aired": None,
+             "updated_at": "2006-10-08T04:00:00.000Z"
+         }}
+    ])
+
+    show = client.search("foo")[0]
+    assert show.first_aired is None
+    assert show.updated_at == date_parser("2006-10-08T04:00:00.000Z")
