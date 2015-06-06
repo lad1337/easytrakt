@@ -47,7 +47,6 @@ class BaseModel(object):
         return generator(self.client, self._data[name], self)
 
     def __getattr__(self, name):
-        # self.client.logger.debug("looking for '%s' on %s", name, self)
         if name in self._data:
             if name in self.nested:
                 return self.handle_nested(name, self.nested[name])
@@ -109,6 +108,12 @@ class BaseModel(object):
                 self, name, data)
             self._data.update(**data)
         return data
+
+    def keys(self):
+        keys = []
+        for attributes in self.extendables.values():
+            keys.extend(attributes)
+        return sorted(keys)
 
     @property
     def type(self):

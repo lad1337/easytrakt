@@ -78,3 +78,8 @@ def test_init_with_trakt_id(client):
     show = Show(client, 1)
     assert show
     assert show.title == "foo"
+
+
+def test_keys(client):
+    assert Show(client, 1).keys() == [
+        'airs', 'ids', 'images', 'overview', 'seasons', 'title']
