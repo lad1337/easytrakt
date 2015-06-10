@@ -2,7 +2,12 @@ from dateutil.parser import parse as date_parser
 from mock import Mock
 import pytest
 
-from easytrakt.models import Show, Season, Episode
+from easytrakt.models import Episode
+from easytrakt.models import Movie
+from easytrakt.models import MovieWatchlist
+from easytrakt.models import Season
+from easytrakt.models import Settings
+from easytrakt.models import Show
 
 
 def test_search(client):
@@ -132,3 +137,48 @@ def test_initial_missing_image_type(client):
     assert show.images.clearart.full == "clearart_image_url"
     assert show.images.fanart.full == "fanart_image_url"
     assert show.images.thumb.full == "thumb_image_url"
+
+
+def test_settings(client, user_data):
+    client.request = Mock(return_value=user_data)
+    settings = Settings(client)
+    assert settings.user.username == "lad1337"
+
+
+def test_get_watchlist(client):
+    watchlist_data = [
+        {
+            "listed_at": "2014-09-01T09:10:11.000Z",
+            "type": "movie",
+            "movie": {
+                "title": "TRON: Legacy",
+                "year": 2010,
+                "ids": {
+                    "trakt": 1,
+                    "slug": "tron-legacy-2010",
+                    "imdb": "tt1104001",
+                    "tmdb": 20526
+                }
+            }
+        },
+        {
+            "listed_at": "2014-09-01T09:10:11.000Z",
+            "type": "movie",
+            "movie": {
+                "title": "The Dark Knight",
+                "year": 2008,
+                "ids": {
+                    "trakt": 6,
+                    "slug": "the-dark-knight-2008",
+                    "imdb": "tt0468569",
+                    "tmdb": 155
+                }
+            }
+        }
+    ]
+    client.request = Mock(return_value=watchlist_data)
+    watchlist = MovieWatchlist(client)
+    assert watchlist.items
+    assert isinstance(watchlist.items[0], Movie)
+    assert watchlist.items[0].listed_at ==\
+        date_parser("2014-09-01T09:10:11.000Z")

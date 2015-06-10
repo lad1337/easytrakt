@@ -6,7 +6,7 @@ import logging
 from cachecontrol import CacheControl
 import requests
 
-from models import model_from_search_item
+from models import model_from_item
 from models import TYPE_MAP
 
 BASE_URL = "https://api-v2launch.trakt.tv"
@@ -37,7 +37,7 @@ class Client(object):
             "type": type,
             "year": year
         }
-        return [model_from_search_item(self, item)
+        return [model_from_item(self, item)
                 for item in self.request("search", params)]
 
     def request(self, uri_path, params=None):
