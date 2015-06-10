@@ -2,35 +2,16 @@ from collections import defaultdict
 from functools import partial
 from json import loads
 
-from attrdict import AttrDict
-from dateutil.parser import parse as date_parser
+import generator
 
 
-BASE_NESTED = {"ids": lambda c, d, p: AttrDict(d)}
+BASE_NESTED = {"ids": generator.attrdict}
 
 
-def model_from_search_item(client, item):
+def model_from_item(client, item):
     type_ = item["type"]
 
     return TYPE_MAP[type_](client, item[type_])
-
-
-def images_generator(client, images, parent, expected=()):
-    if expected and not all(type_ in images for type_ in expected):
-        raise GeneratorExit(
-            "not all expected image types found %s", expected)
-    out = AttrDict()
-    for type_, sizes in images.items():
-        for size, url in sizes.items():
-            if type_ not in out:
-                out[type_] = AttrDict()
-            out[type_][size] = url
-    return out
-
-
-def date_generator(client, date, parent):
-    if date:
-        return date_parser(date)
 
 
 class BaseModel(object):
@@ -88,7 +69,8 @@ class BaseModel(object):
                         extendable[1:].startswith(self.type):
                     path_extension = extendable
             if path_extension is None:
-                raise ValueError("no parent extension found for '%s'", self.type)
+                raise ValueError(
+                    "no parent extension found for '%s'", self.type)
             return {
                 "path": self.parent.uri_path + path_extension,
                 "extend_flag": extend_key[1:]}
@@ -107,9 +89,15 @@ class BaseModel(object):
         else:
             data = self.client.request(uri)
         if isinstance(data, list):
+            self.client.logger.debug(
+                "%s is adding list(%s) to _data on '%s'", self, len(data), name)
             self._data[name] = data
             for entry in data:
                 base = BaseModel(self.client, entry)
+                try:  # for non standard things like watchlist items
+                    base.trakt
+                except AttributeError:
+                    break
                 if base.trakt == self.trakt:
                     self.client.logger.debug(
                         "%s is applying '%s' with entry %s", self, name, base)
@@ -162,8 +150,8 @@ class Movie(BaseModel):
                  "certification"],
         "/seasons": ["seasons"]}
     nested = {
-        "released": date_generator,
-        "images": images_generator
+        "released": generator.date,
+        "images": generator.images
     }
     uri_section = "/movies/{self.id}"
 
@@ -177,8 +165,8 @@ class Episode(BaseModel):
             "updated_at", "rating", "votes", "available_translations"],
         "episodes": ["episodes"]}
     nested = {
-        "first_aired": date_generator,
-        "images": images_generator
+        "first_aired": generator.date,
+        "images": generator.images
     }
     uri_section = "/episodes/{self.number}"
 
@@ -193,7 +181,7 @@ class Season(BaseModel):
         "episodes": ["episodes"]}
     nested = {
         "episodes": lambda c, ee, p: [Episode(c, s, p) for s in ee],
-        "images": images_generator
+        "images": generator.images
     }
     uri_section = "/seasons/{self.number}"
 
@@ -211,23 +199,63 @@ class Show(BaseModel):
         "/seasons": ["seasons"]}
     nested = {
         "seasons": lambda c, ss, p: [Season(c, s, p) for s in ss],
-        "airs": lambda c, d, p: AttrDict(d),
+        "airs": generator.attrdict,
         "images": partial(
-            images_generator,
+            generator.images,
             expected=["poster", "banner", "logo", "clearart", "thumb", "fanart"]
         ),
-        "updated_at": date_generator,
-        "first_aired": date_generator
+        "updated_at": generator.date,
+        "first_aired": generator.date
     }
     uri_section = "shows/{self.ids.trakt}"
 
 
 class Person(BaseModel):
-    pass
+    @property
+    def id(self):
+        return self.user.username
+    heretical_identifier_structure = '{"username": %s}'
+    uri_section = "user/{self.username}"
 
 
 class List(BaseModel):
     pass
+
+
+class WatchList(BaseModel):
+    extendables = {
+        "watchlist": ["items"]
+    }
+    nested = {
+        "items": generator.watchlist_items
+    }
+
+    def __init__(self, client, data=None, parent=None):
+        super(WatchList, self).__init__(client, data or {}, parent)
+
+
+class MovieWatchlist(WatchList):
+    uri_section = "sync/watchlist/movies"
+
+
+class ShowWatchlist(WatchList):
+    uri_section = "sync/watchlist/shows"
+
+
+class Settings(BaseModel):
+    extendables = {
+        "Settings": ["user", "account", "connection", "sharing_text"]
+    }
+    nested = {
+        "user": generator.attrdict,
+        "account": generator.attrdict,
+        "connections": generator.attrdict,
+        "sharing_text": generator.attrdict
+    }
+    uri_section = "users/settings"
+
+    def __init__(self, client, data=None, parent=None):
+        super(Settings, self).__init__(client, data or {}, parent)
 
 
 TYPE_MAP = {

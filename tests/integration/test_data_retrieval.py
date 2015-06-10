@@ -2,7 +2,14 @@ from datetime import datetime
 
 from dateutil.parser import parse as date_parser
 
-from easytrakt.models import Show, Season, Episode, Movie
+
+from easytrakt.models import Episode
+from easytrakt.models import Movie
+from easytrakt.models import MovieWatchlist
+from easytrakt.models import Season
+from easytrakt.models import Settings
+from easytrakt.models import Show
+from easytrakt.models import ShowWatchlist
 
 
 def test_search_show(client):
@@ -55,3 +62,20 @@ def test_episodes(client):
     assert isinstance(episode.first_aired, datetime)
     assert episode.first_aired == date_parser("2006-10-08T04:00:00.000Z")
     assert episode.images.screenshot.full.startswith("http")
+
+
+def test_settings(client):
+    settings = Settings(client)
+    assert settings.user.username == "lad1337"
+
+
+def test_movie_watchlist(client):
+    watchlist = MovieWatchlist(client)
+    assert watchlist.items
+    assert isinstance(watchlist.items[0], Movie)
+
+
+def test_show_watchlist(client):
+    watchlist = ShowWatchlist(client)
+    assert watchlist.items
+    assert isinstance(watchlist.items[0], Show)
