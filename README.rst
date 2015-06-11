@@ -1,7 +1,7 @@
 EasyTrakt
 =========
 
-|alt travis build| |alt pypi version| |alt requires| |alt pypi
+|alt travis build| |alt codecov| |alt pypi version| |alt requires| |alt pypi
 downloads|
 
 install
@@ -70,6 +70,7 @@ every attribute is build dynamically, to get all keys on the current
 level call ``.keys()`` of any model class
 
 .. |alt travis build| image:: https://img.shields.io/travis/lad1337/easytrakt.svg
+.. |alt codecev| image:: https://img.shields.io/codecov/c/github/lad1337/easytrakt.svg
 .. |alt pypi version| image:: https://img.shields.io/pypi/v/easytrakt.svg
 .. |alt requires| image:: https://img.shields.io/requires/github/lad1337/easytrakt.svg
 .. |alt pypi downloads| image:: https://img.shields.io/pypi/dm/easytrakt.svg
